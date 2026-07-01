@@ -19,10 +19,11 @@ public class square_move : MonoBehaviour
     {
         move.x = Input.GetAxisRaw("Horizontal");
         move.y = Input.GetAxisRaw("Vertical");
+    
     }
 
     private void FixedUpdate()
     {
-        rb.linearVelocity = move * moving_speed;
+        rb.linearVelocity = move.normalized * moving_speed;
     }
 }

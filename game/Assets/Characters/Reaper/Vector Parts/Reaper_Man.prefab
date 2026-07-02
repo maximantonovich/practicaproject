@@ -1125,7 +1125,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4293316408603430}
   - component: {fileID: 212011666834749290}
-  - component: {fileID: 8888319909126606572}
+  - component: {fileID: 7814200611840833237}
   m_Layer: 0
   m_Name: Face 01
   m_TagString: Untagged
@@ -1208,7 +1208,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
---- !u!114 &8888319909126606572
+--- !u!114 &7814200611840833237
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1219,7 +1219,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 87d8dc87df01e4958ab48153b19f0ccd, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Spriter2UnityDX.TextureController
+  m_EditorClassIdentifier: Assembly-CSharp-firstpass::Spriter2UnityDX.TextureController
   DisplayedSprite: 0
   Sprites:
   - {fileID: 21300000, guid: dde228dd3c2a0974f8af6ffab91dba32, type: 3}

@@ -52,12 +52,12 @@ public class square_move : MonoBehaviour
         {
             if (Mathf.Abs(move.x) > Mathf.Abs(move.y))
             {
-                // Горизонтальное движение
+                
                 aim.rotation = move.x > 0 ? rightRotation : leftRotation;
             }
             else
             {
-                // Вертикальное движение
+                
                 aim.rotation = move.y > 0 ? upRotation : downRotation;
             }
         }

@@ -2,24 +2,34 @@ using UnityEngine;
 
 public class sword_attack : MonoBehaviour
 {
-    
-
     public GameObject melee;
     bool is_attacking = false;
-    float atk_duration= 0.25f;
+    float atk_duration = 0.25f;
     float atk_timer = 0f; 
     public Animator animator;
 
+    public int damage = 20;
+    private bool hasDealtDamage = false;
+
+    public Camera mainCamera;
 
     void Start()
     {
-        // Если не назначен в инспекторе, ищем на родителе
         if (animator == null)
             animator = GetComponentInParent<Animator>();
+        
+        if (mainCamera == null)
+            mainCamera = Camera.main;
+
+        if (melee != null)
+        {
+            BoxCollider2D col = melee.GetComponent<BoxCollider2D>();
+            if (col != null)
+                col.isTrigger = true;
+            melee.SetActive(false);
+        }
     }
 
-
-    // Update is called once per frame
     void Update()
     {
         check_melee_time();
@@ -30,31 +40,61 @@ public class sword_attack : MonoBehaviour
         }
     }
 
-
-
     void Attack()
     {
         if(!is_attacking)
         {
             is_attacking = true;
+            hasDealtDamage = false;
             melee.SetActive(true);
 
-
-
-             if (animator != null)
+            if (animator != null)
             {
-                // Получаем направление движения из Animator
-                float horizontal = animator.GetFloat("Horizontal");
-                float vertical = animator.GetFloat("Vertical");
+                Vector2 attackDirection = GetAttackDirection();
                 
-                // Устанавливаем параметры для анимации атаки
-                animator.SetFloat("AttackHorizontal", horizontal);
-                animator.SetFloat("AttackVertical", vertical);
+               
+                
+                
+                animator.SetFloat("AttackHorizontal", attackDirection.x);
+                animator.SetFloat("AttackVertical", attackDirection.y);
                 animator.SetTrigger("Attack");
             }
         }
     }
 
+    Vector2 GetAttackDirection()
+    {
+        
+        Vector3 mouseScreenPos = Input.mousePosition;
+        
+       
+        Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(new Vector3(
+            mouseScreenPos.x, 
+            mouseScreenPos.y, 
+            Mathf.Abs(transform.position.z - mainCamera.transform.position.z) // Важно для 2D!
+        ));
+        
+        
+        Vector2 direction = (mouseWorldPos - transform.position).normalized;
+        
+       
+        
+        return direction;
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (!is_attacking || hasDealtDamage) return;
+
+        Health enemyHealth = other.GetComponent<Health>();
+        
+        if (enemyHealth != null && enemyHealth.IsAlive())
+        {
+            enemyHealth.TakeDamage(damage);
+            hasDealtDamage = true;
+            Debug.Log($"⚔️ Атакован {other.name} на {damage} урона!");
+        }
+    }
 
     void check_melee_time()
     {
@@ -66,11 +106,9 @@ public class sword_attack : MonoBehaviour
                 is_attacking = false;
                 melee.SetActive(false);
                 atk_timer = 0;
+                hasDealtDamage = false;
                 animator.SetTrigger("Attack_done");
             }   
         }
     }
 }
-
-
-

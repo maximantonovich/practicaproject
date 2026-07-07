@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class EnemyFlip : MonoBehaviour
+public class Enemy : MonoBehaviour
 {
     public Transform target;
     public float speed = 3f;

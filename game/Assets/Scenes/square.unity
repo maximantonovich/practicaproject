@@ -754,9 +754,16 @@ MonoBehaviour:
   maxRooms: 15
   maxGenerationAttempts: 100
   roomSpacing: 0.5
+  maxBranching: 1
+  deadEndChance: 0.1
   roomPrefabs:
   - {fileID: 3869999975630531201, guid: 09d97ac73347c654393063931554b03c, type: 3}
-  - {fileID: 3869999975630531201, guid: 09d97ac73347c654393063931554b03c, type: 3}
+  - {fileID: 3869999975630531201, guid: 5675ba631b268084a8e26cf16c0858cb, type: 3}
+  - {fileID: 3869999975630531201, guid: 96007288444304040b2a4d4d720117f0, type: 3}
+  - {fileID: 3869999975630531201, guid: 40009cf9359a88149a252c0de20e003f, type: 3}
+  - {fileID: 3869999975630531201, guid: e301e0523d3ffe949b0099cccb831f93, type: 3}
+  - {fileID: 3869999975630531201, guid: 781a6116f50176443923a3d32f85bbe8, type: 3}
+  - {fileID: 3869999975630531201, guid: 7fac90971dbdfdf44b6140f5f5382997, type: 3}
   startRoomPrefab: {fileID: 3869999975630531201, guid: 09d97ac73347c654393063931554b03c, type: 3}
   dungeonParent: {fileID: 191749198}
   playerSpawnParent: {fileID: 1507832795}
@@ -770,9 +777,9 @@ Transform:
   m_GameObject: {fileID: 918086247}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.90715, y: -6.38844, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: -0.67, y: -0.67, z: -0.67}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

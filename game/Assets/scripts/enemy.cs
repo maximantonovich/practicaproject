@@ -118,15 +118,6 @@ public class Enemy : MonoBehaviour
         target = newTarget;
     }
     
-    // Визуализация для отладки
-    private void OnDrawGizmosSelected()
-    {
-        // Радиус обнаружения (желтый)
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
-        
-        // Радиус атаки (красный)
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
-    }
+    
+    
 }

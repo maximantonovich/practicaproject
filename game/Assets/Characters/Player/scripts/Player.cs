@@ -2,6 +2,12 @@ using UnityEngine;
 
 public class square_move : MonoBehaviour
 {
+    [Header("Здоровье")]
+    public int maxHealth = 100;
+    public int currentHealth;
+    private bool isDead = false;
+
+    [Header("Движение и прицел")]
     public Transform aim;
     bool is_walking = false;
 
@@ -17,15 +23,22 @@ public class square_move : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
-        
+
         if (mainCamera == null)
             mainCamera = Camera.main;
-        
-       
+    }
+
+    private void Start()
+    {
+ 
+        currentHealth = maxHealth;
     }
 
     void Update()
     {
+    
+        if (isDead) return;
+
         move.x = Input.GetAxisRaw("Horizontal");
         move.y = Input.GetAxisRaw("Vertical");
 
@@ -40,6 +53,8 @@ public class square_move : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (isDead) return;
+
         rb.linearVelocity = move.normalized * moving_speed;
     }
 
@@ -47,36 +62,69 @@ public class square_move : MonoBehaviour
     {
         if (mainCamera == null || aim == null) return;
 
-      
         Vector3 mouseScreenPos = Input.mousePosition;
-        
 
-        
         float distance = Mathf.Abs(transform.position.z - mainCamera.transform.position.z);
-        Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(new Vector3( mouseScreenPos.x, mouseScreenPos.y, distance));
-        
-       
+        Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(new Vector3(mouseScreenPos.x, mouseScreenPos.y, distance));
 
-       
         Vector2 direction = (mouseWorldPos - transform.position).normalized;
-       
 
-       
         float angle = 0f;
-        
+
         if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
         {
-            // Горизонтально
             angle = direction.x > 0 ? 0f : 180f;
         }
         else
         {
-            // Вертикально
-            angle = direction.y > 0 ? 90f : -90f;
             
+            angle = direction.y > 0 ? 90f : -90f;
+        }
+
+        aim.eulerAngles = new Vector3(0, 0, angle);
+    }
+
+
+
+
+    public void TakeDamage(int damage)
+    {
+        if (isDead) return;
+
+        currentHealth -= damage;
+        Debug.Log($"Получен урон: {damage}. Осталось HP: {currentHealth}");
+
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        isDead = true;
+        currentHealth = 0;
+
+        if (_animator != null)
+        {
+            _animator.SetTrigger("Die");
+        }
+
+      
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
         }
 
        
-        aim.eulerAngles = new Vector3(0, 0, angle);
+        Collider2D coll = GetComponent<Collider2D>();
+        if (coll != null)
+        {
+            coll.enabled = false;
+        }
+
+       
+       
+        this.enabled = false;
     }
 }

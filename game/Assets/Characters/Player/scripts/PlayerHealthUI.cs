@@ -6,49 +6,38 @@ public class PlayerHealthUI : MonoBehaviour
     [Header("UI элементы")]
     [SerializeField] private Slider healthSlider;
     [SerializeField] private Text healthText;
-    
-    private PlayerHealth playerHealth;
-    
+
+    private square_move player;
+
     private void Start()
     {
-        playerHealth = GetComponent<PlayerHealth>();
-        if (playerHealth == null)
+        player = FindAnyObjectByType<square_move>();
+
+        if (player == null)
         {
-            Debug.LogWarning("PlayerHealth не найден!");
+            Debug.LogWarning("Игрок со скриптом square_move не найден на сцене!");
             return;
         }
-        
-        // Если слайдер не назначен, ищем в дочерних объектах
+
         if (healthSlider == null)
             healthSlider = GetComponentInChildren<Slider>();
-        
+
         if (healthText == null)
             healthText = GetComponentInChildren<Text>();
-        
-        // Обновляем UI
-        UpdateHealthUI(playerHealth.CurrentHealth, playerHealth.MaxHealth);
-        
-        // Подписываемся на события
-        playerHealth.OnHealthChanged += UpdateHealthUI;
     }
-    
-    private void UpdateHealthUI(int currentHealth, int maxHealth)
+
+    private void Update()
     {
+        if (player == null) return;
         if (healthSlider != null)
         {
-            healthSlider.maxValue = maxHealth;
-            healthSlider.value = currentHealth;
+            healthSlider.maxValue = player.maxHealth;
+            healthSlider.value = player.currentHealth;
         }
-        
+
         if (healthText != null)
         {
-            healthText.text = $"{currentHealth}/{maxHealth}";
+            healthText.text = $"{player.currentHealth} / {player.maxHealth}";
         }
-    }
-    
-    private void OnDestroy()
-    {
-        if (playerHealth != null)
-            playerHealth.OnHealthChanged -= UpdateHealthUI;
     }
 }

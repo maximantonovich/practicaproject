@@ -71,7 +71,7 @@ public class sword_attack : MonoBehaviour
         Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(new Vector3(
             mouseScreenPos.x, 
             mouseScreenPos.y, 
-            Mathf.Abs(transform.position.z - mainCamera.transform.position.z) // Важно для 2D!
+            Mathf.Abs(transform.position.z - mainCamera.transform.position.z) 
         ));
         
         

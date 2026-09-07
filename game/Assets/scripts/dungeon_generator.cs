@@ -8,273 +8,228 @@ public class DungeonGenerator : MonoBehaviour
     [SerializeField] private int maxRooms = 15;
     [SerializeField] private int maxGenerationAttempts = 200;
     [SerializeField] private float roomSpacing = 0.5f;
-    [SerializeField] private float maxBranching = 0.6f;
-    [SerializeField] private float deadEndChance = 0.1f; // Шанс создать тупик
-    
+
+    [Header("Настройки формы лабиринта")]
+    [Range(0f, 1f)]
+    [Tooltip("1.0 - длинная кишка (змея). 0.0 - круглая клякса. 0.7 - идеальный лабиринт с ветками.")]
+    [SerializeField] private float pathStraightness = 0.75f;
+
     [Header("Префабы комнат")]
     [SerializeField] private List<RoomPrefab> roomPrefabs;
     [SerializeField] private RoomPrefab startRoomPrefab;
-    
+
     [Header("Родительские объекты")]
     [SerializeField] private Transform dungeonParent;
     [SerializeField] private Transform playerSpawnParent;
-    
+
     [Header("Игрок")]
     [SerializeField] private GameObject playerPrefab;
-    
+
     private List<RoomPrefab> placedRooms = new List<RoomPrefab>();
-    private Queue<RoomConnection> pendingConnections = new Queue<RoomConnection>();
+    private List<RoomConnection> openConnections = new List<RoomConnection>();
+
     private GameObject currentPlayer;
-    
+
+    private Dictionary<RoomPrefab, Dictionary<RoomSide, Vector2>> doorOffsetsCache = new Dictionary<RoomPrefab, Dictionary<RoomSide, Vector2>>();
+    private Dictionary<RoomPrefab, Vector2> centerOffsetsCache = new Dictionary<RoomPrefab, Vector2>();
+
     public Vector2 PlayerSpawnPosition { get; private set; }
-    
+
     private void Start()
     {
         GenerateDungeon();
     }
-    
+
     [ContextMenu("Generate Dungeon")]
     public void GenerateDungeon()
     {
         ClearDungeon();
+        CacheRoomData();
+
         placedRooms.Clear();
-        pendingConnections.Clear();
-        
-        
-        
-        
-        
-        
+        openConnections.Clear();
+
         RoomPrefab startRoom = InstantiateRoom(startRoomPrefab, Vector2.zero);
         placedRooms.Add(startRoom);
         PlayerSpawnPosition = startRoom.GetSpawnPoint();
-        
-        
-        
-       
+
         foreach (RoomSide side in startRoom.GetAvailableSides())
         {
-            pendingConnections.Enqueue(new RoomConnection(startRoom, side));
+            openConnections.Add(new RoomConnection(startRoom, side));
         }
-        
-        
+
         int attempts = 0;
-        int failedAttempts = 0;
-        
-        while (placedRooms.Count < maxRooms && pendingConnections.Count > 0 && attempts < maxGenerationAttempts)
+
+
+        while (placedRooms.Count < maxRooms && openConnections.Count > 0 && attempts < maxGenerationAttempts)
         {
             attempts++;
-            
-            
-            
-            RoomConnection connection = pendingConnections.Dequeue();
-            
-           
-            if (ShouldCreateDeadEnd(connection))
-            {
-                continue;
-            }
-            
+
+
+            RoomConnection connection = ChooseNextConnection();
+
             if (TryPlaceRoom(connection))
             {
-                failedAttempts = 0;
+
+                openConnections.Remove(connection);
             }
             else
             {
-                failedAttempts++;
+
+                openConnections.Remove(connection);
+                connection.parentRoom.CloseDoor(connection.side);
             }
         }
-        
-       
-        
-       
-        
+
+
+
+
         SpawnPlayer();
     }
-    
-    private bool ShouldCreateDeadEnd(RoomConnection connection)
+
+
+    private RoomConnection ChooseNextConnection()
     {
-       
-        if (placedRooms.Count <= 1)
-            return false;
-        
-       
-        RoomPrefab parentRoom = connection.parentRoom;
-        List<RoomSide> availableSides = parentRoom.GetAvailableSides();
-        availableSides.Remove(connection.side);
-        
-       
-        if (availableSides.Count == 0)
-            return false;
-        
-        
-        float chance = deadEndChance;
-        
-        
-        int connectionCount = parentRoom.GetAvailableSides().Count;
-        if (connectionCount >= 3)
+
+        bool keepGoingStraight = Random.value < pathStraightness;
+
+        if (keepGoingStraight)
         {
-            chance += 0.2f;
+
+            return openConnections[openConnections.Count - 1];
         }
-        
-      
-        if (placedRooms.Count < maxRooms * 0.3f)
+        else
         {
-            chance *= 0.5f;
+
+            int randomIndex = Random.Range(0, openConnections.Count);
+            return openConnections[randomIndex];
         }
-        
-        return Random.value < chance;
     }
-    
+
+    private void CacheRoomData()
+    {
+        doorOffsetsCache.Clear();
+        centerOffsetsCache.Clear();
+
+        List<RoomPrefab> allPrefabs = new List<RoomPrefab>(roomPrefabs);
+        if (!allPrefabs.Contains(startRoomPrefab)) allPrefabs.Add(startRoomPrefab);
+
+        RoomSide[] allSides = { RoomSide.North, RoomSide.South, RoomSide.East, RoomSide.West };
+
+        foreach (RoomPrefab prefab in allPrefabs)
+        {
+            doorOffsetsCache[prefab] = new Dictionary<RoomSide, Vector2>();
+
+            GameObject tempObj = Instantiate(prefab.gameObject, new Vector3(-10000, -10000, 0), Quaternion.identity);
+            RoomPrefab tempRoom = tempObj.GetComponent<RoomPrefab>();
+            Vector2 pivot = tempObj.transform.position;
+
+            centerOffsetsCache[prefab] = tempRoom.Center - pivot;
+
+            foreach (RoomSide side in allSides)
+            {
+                if (tempRoom.HasConnection(side))
+                {
+                    Vector2 actualDoorPos = tempRoom.GetDoorPosition(side);
+                    doorOffsetsCache[prefab][side] = actualDoorPos - pivot;
+                }
+            }
+            DestroyImmediate(tempObj);
+        }
+    }
+
     private bool TryPlaceRoom(RoomConnection connection)
     {
-       
-        Vector2 doorPos = connection.parentRoom.GetDoorPosition(connection.side);
-        
-       
+        Vector2 parentDoorPos = connection.parentRoom.GetDoorPosition(connection.side);
+
+
         List<RoomPrefab> shuffledPrefabs = roomPrefabs.OrderBy(x => Random.value).ToList();
-        
-       
-        foreach (RoomPrefab newRoomPrefab in shuffledPrefabs)
+
+        foreach (RoomPrefab prefabToPlace in shuffledPrefabs)
         {
-            
-            RoomSide oppositeSide = GetOppositeSide(connection.side);
-            if (!newRoomPrefab.HasConnection(oppositeSide))
+            RoomSide attachSide = GetOppositeSide(connection.side);
+
+
+            if (!prefabToPlace.HasConnection(attachSide)) continue;
+
+            Vector2 localDoorOffset = doorOffsetsCache[prefabToPlace][attachSide];
+            Vector2 targetPosition = parentDoorPos - localDoorOffset;
+
+            if (!IsOverlapping(prefabToPlace, targetPosition))
             {
-                continue;
-            }
-            
-            
-            Vector2 newRoomPos = CalculateRoomPosition(doorPos, connection.side, newRoomPrefab);
-            
-           
-            if (!IsOverlapping(newRoomPos, newRoomPrefab.Width, newRoomPrefab.Height))
-            {
-               
-                RoomPrefab newRoom = InstantiateRoom(newRoomPrefab, newRoomPos);
+
+                RoomPrefab newRoom = InstantiateRoom(prefabToPlace, targetPosition);
                 placedRooms.Add(newRoom);
-                
-               
-                newRoom.SetAttachedSide(oppositeSide);
-                
-                
-                AddNewConnections(newRoom, oppositeSide);
-        
+
+                newRoom.SetAttachedSide(attachSide);
+                connection.parentRoom.SetAttachedSide(connection.side);
+
+
+                AddNewConnections(newRoom, attachSide);
 
                 return true;
             }
         }
-        
+
         return false;
     }
-    
-    private Vector2 CalculateRoomPosition(Vector2 doorPos, RoomSide side, RoomPrefab newRoom)
-    {
-       
-        RoomSide attachSide = GetOppositeSide(side);
-        Vector2 doorLocalPos = GetDoorLocalPosition(newRoom, attachSide);
-        
-        
-        Vector2 centerPos = doorPos - doorLocalPos;
-        Vector2 pivotPos = centerPos - newRoom.PivotOffset;
-        
-        return pivotPos;
-    }
-    
-    private Vector2 GetDoorLocalPosition(RoomPrefab room, RoomSide side)
-    {
-       
-        Vector2 doorWorldPos = room.GetDoorPosition(side);
-        Vector2 centerPos = room.Center;
-        
-        Vector2 localPos = doorWorldPos - centerPos;
-        
-        
-        if (Mathf.Abs(localPos.x) > room.Width || Mathf.Abs(localPos.y) > room.Height)
-        {
-           
-            switch (side)
-            {
-                case RoomSide.North: return new Vector2(0, room.Height / 2f);
-                case RoomSide.South: return new Vector2(0, -room.Height / 2f);
-                case RoomSide.West: return new Vector2(-room.Width / 2f, 0);
-                case RoomSide.East: return new Vector2(room.Width / 2f, 0);
-                default: return Vector2.zero;
-            }
-        }
-        
-        return localPos;
-    }
-    
+
     private void AddNewConnections(RoomPrefab room, RoomSide attachedSide)
     {
-       
         List<RoomSide> availableSides = room.GetAvailableSides();
-        
-        availableSides.Remove(attachedSide);
-        
-       
+
+
+        if (availableSides.Contains(attachedSide))
+        {
+            availableSides.Remove(attachedSide);
+        }
+
+
         availableSides = availableSides.OrderBy(x => Random.value).ToList();
-        
-        
-        int maxNewConnections;
-        
-        
-        if (placedRooms.Count >= maxRooms - 2)
+
+        foreach (RoomSide side in availableSides)
         {
-            maxNewConnections = Mathf.Min(availableSides.Count, 1);
+            openConnections.Add(new RoomConnection(room, side));
         }
-        else
-        {
-            
-            maxNewConnections = Mathf.Min(availableSides.Count, Random.Range(1, Mathf.Min(availableSides.Count, 3)));
-        }
-        
-       
-        for (int i = 0; i < maxNewConnections; i++)
-        {
-            pendingConnections.Enqueue(new RoomConnection(room, availableSides[i]));
-        }
-        
-       
-       
     }
-    
-    private bool IsOverlapping(Vector2 position, float width, float height)
+
+
+    private bool IsOverlapping(RoomPrefab prefabToCheck, Vector2 targetPivotPos)
     {
-        float halfWidth = width / 2f;
-        float halfHeight = height / 2f;
-        
-        
-        Rect newRect = new Rect(
-            position.x - halfWidth - roomSpacing,
-            position.y - halfHeight - roomSpacing,
-            width + roomSpacing * 2,
-            height + roomSpacing * 2
+        Vector2 localCenterOffset = centerOffsetsCache[prefabToCheck];
+        Vector2 expectedWorldCenter = targetPivotPos + localCenterOffset;
+
+        float halfWidth = prefabToCheck.Width / 2f;
+        float halfHeight = prefabToCheck.Height / 2f;
+
+        Rect expectedRect = new Rect(
+            expectedWorldCenter.x - halfWidth - roomSpacing,
+            expectedWorldCenter.y - halfHeight - roomSpacing,
+            prefabToCheck.Width + roomSpacing * 2,
+            prefabToCheck.Height + roomSpacing * 2
         );
-        
-        foreach (RoomPrefab room in placedRooms)
+
+        foreach (RoomPrefab placedRoom in placedRooms)
         {
-            Vector2 roomPos = room.transform.position;
-            float roomHalfWidth = room.Width / 2f;
-            float roomHalfHeight = room.Height / 2f;
-            
+            Vector2 placedWorldCenter = placedRoom.Center;
+            float placedHalfWidth = placedRoom.Width / 2f;
+            float placedHalfHeight = placedRoom.Height / 2f;
+
             Rect existingRect = new Rect(
-                roomPos.x - roomHalfWidth,
-                roomPos.y - roomHalfHeight,
-                room.Width,
-                room.Height
+                placedWorldCenter.x - placedHalfWidth,
+                placedWorldCenter.y - placedHalfHeight,
+                placedRoom.Width,
+                placedRoom.Height
             );
-            
-            if (newRect.Overlaps(existingRect))
+
+            if (expectedRect.Overlaps(existingRect))
             {
                 return true;
             }
         }
-        
         return false;
     }
-    
+
     private RoomPrefab InstantiateRoom(RoomPrefab prefab, Vector2 position)
     {
         GameObject roomObject = Instantiate(prefab.gameObject, position, Quaternion.identity, dungeonParent);
@@ -282,66 +237,56 @@ public class DungeonGenerator : MonoBehaviour
         room.Initialize();
         return room;
     }
-    
+
     private RoomSide GetOppositeSide(RoomSide side)
     {
-        switch (side)
+        return side switch
         {
-            case RoomSide.North: return RoomSide.South;
-            case RoomSide.South: return RoomSide.North;
-            case RoomSide.West: return RoomSide.East;
-            case RoomSide.East: return RoomSide.West;
-            default: return RoomSide.North;
-        }
+            RoomSide.North => RoomSide.South,
+            RoomSide.South => RoomSide.North,
+            RoomSide.West => RoomSide.East,
+            RoomSide.East => RoomSide.West,
+            _ => RoomSide.North,
+        };
     }
-    
+
     private void SpawnPlayer()
     {
         if (playerPrefab == null) return;
-        
-        if (currentPlayer != null)
-            Destroy(currentPlayer);
-        
+
+        if (currentPlayer != null) DestroyImmediate(currentPlayer);
+
         currentPlayer = Instantiate(playerPrefab, PlayerSpawnPosition, Quaternion.identity, playerSpawnParent);
-        
+
         Camera mainCamera = Camera.main;
         if (mainCamera != null)
         {
             mainCamera.transform.position = new Vector3(PlayerSpawnPosition.x, PlayerSpawnPosition.y, -10f);
         }
     }
-    
+
     private void ClearDungeon()
     {
         if (dungeonParent != null)
         {
             for (int i = dungeonParent.childCount - 1; i >= 0; i--)
+            {
                 DestroyImmediate(dungeonParent.GetChild(i).gameObject);
+            }
         }
-        
-        if (currentPlayer != null)
-            DestroyImmediate(currentPlayer);
+        if (currentPlayer != null) DestroyImmediate(currentPlayer);
     }
-    
-    public void RestartDungeon()
-    {
-        GenerateDungeon();
-    }
-    
-  
-
+}
 
 [System.Serializable]
 public class RoomConnection
 {
     public RoomPrefab parentRoom;
     public RoomSide side;
-    
+
     public RoomConnection(RoomPrefab room, RoomSide side)
     {
         this.parentRoom = room;
         this.side = side;
     }
-}
-
 }

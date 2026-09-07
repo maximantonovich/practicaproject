@@ -19,7 +19,6 @@ public class Enemy : MonoBehaviour
     {
         animator = GetComponent<Animator>();
         
-        // Если цель не задана, ищем игрока автоматически
         if (target == null)
         {
             GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -34,29 +33,24 @@ public class Enemy : MonoBehaviour
     {
         if (target == null) return;
         
-        // Вычисляем расстояние до игрока
         float distanceToPlayer = Vector3.Distance(transform.position, target.position);
-        
-        // Проверяем, находится ли игрок в радиусе обнаружения
         if (distanceToPlayer > detectionRange)
         {
-            // Игрок слишком далеко - враг стоит на месте
             animator.SetFloat("Speed", 0f);
             return;
         }
         
-        // Движение к герою
+
         Vector3 direction = (target.position - transform.position).normalized;
-        
-        // Проверяем, может ли враг атаковать
+
         if (distanceToPlayer <= attackRange)
         {
-            // Враг в радиусе атаки
+   
             if (Time.time > lastAttackTime + attackCooldown && !isAttacking)
             {
                 Attack();
             }
-            // Не двигаемся во время атаки
+
             if (!isAttacking)
             {
                 transform.position += direction * speed * Time.deltaTime;
@@ -64,55 +58,57 @@ public class Enemy : MonoBehaviour
         }
         else
         {
-            // Враг двигается к игроку
+            
             transform.position += direction * speed * Time.deltaTime;
         }
-        
-        // Поворот врага
+    
         if (direction.x < 0)
             transform.localScale = new Vector3(-0.4f, 0.4f, 0.4f); 
         else if (direction.x > 0)
             transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
-        
-        // Анимация скорости (если враг не атакует)
+      
         if (!isAttacking)
         {
             animator.SetFloat("Speed", Mathf.Abs(direction.x));
         }
     }
-    
+
     private void Attack()
     {
         lastAttackTime = Time.time;
         isAttacking = true;
-        
-        // Анимация атаки
+
+       
         if (animator != null)
         {
             animator.SetTrigger("Attack");
         }
-        
-        // Наносим урон игроку
+
         if (target != null)
         {
-            PlayerHealth playerHealth = target.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
+          
+            square_move player = target.GetComponent<square_move>();
+
+            if (player != null)
             {
-                playerHealth.TakeDamage(damage);
-                Debug.Log($" Враг атаковал! Урон: {damage}");
+                player.TakeDamage(damage);
+                Debug.Log($"Враг атаковал! Урон: {damage}");
+            }
+            else
+            {
+                Debug.LogWarning("Скрипт square_move не найден на игроке!");
             }
         }
-        
-        // Сбрасываем состояние атаки через время
+
+      
         Invoke("ResetAttackState", 0.5f);
     }
-    
+
     private void ResetAttackState()
     {
         isAttacking = false;
     }
     
-    // Метод для установки цели извне (используется EnemySpawner)
     public void SetTarget(Transform newTarget)
     {
         target = newTarget;

@@ -215,7 +215,7 @@ AnimatorController:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Necromancer_of_the_Shadow
-  serializedVersion: 5
+  serializedVersion: 6
   m_AnimatorParameters: []
   m_AnimatorLayers:
   - serializedVersion: 5
@@ -230,6 +230,7 @@ AnimatorController:
     m_IKPass: 0
     m_SyncedLayerAffectsTiming: 0
     m_Controller: {fileID: 9100000}
+  m_EvaluateTransitionsOnStart: 0
 --- !u!1102 &3357798687722667107
 AnimatorState:
   serializedVersion: 6
@@ -414,7 +415,7 @@ AnimatorState:
   m_TimeParameter: 
 --- !u!1107 &6926575233928492428
 AnimatorStateMachine:
-  serializedVersion: 6
+  serializedVersion: 7
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -438,7 +439,7 @@ AnimatorStateMachine:
     m_Position: {x: 340, y: 260, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 3888175592291351192}
-    m_Position: {x: 375, y: 325, z: 0}
+    m_Position: {x: 630, y: 300, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -1696647714045128747}
     m_Position: {x: 410, y: 390, z: 0}

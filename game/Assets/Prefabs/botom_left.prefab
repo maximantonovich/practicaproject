@@ -1338,7 +1338,7 @@ GameObject:
   - component: {fileID: 2440668419129123839}
   - component: {fileID: 3869999975630531201}
   m_Layer: 0
-  m_Name: botom_right 1
+  m_Name: botom_left
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1380,12 +1380,12 @@ MonoBehaviour:
   pivotOffset: {x: 6, y: -5}
   northDoor: {fileID: 0}
   southDoor: {fileID: 3788835577385097432}
-  westDoor: {fileID: 0}
-  eastDoor: {fileID: 5155469671219474975}
-  hasNorthConnection: 1
+  westDoor: {fileID: 5155469671219474975}
+  eastDoor: {fileID: 0}
+  hasNorthConnection: 0
   hasSouthConnection: 1
   hasWestConnection: 1
-  hasEastConnection: 1
+  hasEastConnection: 0
   playerSpawn: {fileID: 4749050293136250089}
 --- !u!1 &2671115852745204754
 GameObject:

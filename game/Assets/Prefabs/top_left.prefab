@@ -1213,9 +1213,9 @@ MonoBehaviour:
   westDoor: {fileID: 2199764256606450311}
   eastDoor: {fileID: 0}
   hasNorthConnection: 1
-  hasSouthConnection: 1
+  hasSouthConnection: 0
   hasWestConnection: 1
-  hasEastConnection: 1
+  hasEastConnection: 0
   playerSpawn: {fileID: 4749050293136250089}
 --- !u!1 &2787462101425335009
 GameObject:

@@ -1212,10 +1212,10 @@ MonoBehaviour:
   southDoor: {fileID: 3788835577385097432}
   westDoor: {fileID: 0}
   eastDoor: {fileID: 0}
-  hasNorthConnection: 1
+  hasNorthConnection: 0
   hasSouthConnection: 1
-  hasWestConnection: 1
-  hasEastConnection: 1
+  hasWestConnection: 0
+  hasEastConnection: 0
   playerSpawn: {fileID: 4749050293136250089}
 --- !u!1 &2671115852745204754
 GameObject:
